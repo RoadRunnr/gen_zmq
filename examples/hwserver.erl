@@ -12,9 +12,8 @@ main() ->
 	application:start(ezmq),
 	Opts = [{ip,{127,0,0,1}}],
 	Port = 5555,
-
-	{ok, Socket} = ezmq:start([{type, rep}]),
-	ezmq:bind(Socket, Port, Opts),
+	{ok, Socket} = gen_zmq:start([{type, rep}]),
+	gen_zmq:bind(Socket, tcp, Port, Opts),
 	loop(Socket).
 
 loop(Socket) ->

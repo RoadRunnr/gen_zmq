@@ -530,6 +530,14 @@ run_recv_q(State) ->
     end.
 
 %% send a specific message to the owner
+<<<<<<< HEAD:src/gen_zmq.erl
+send_owner(Transport, IdMsg, #gen_zmq_socket{pending_recv = {From, Ref}} = State) ->
+    _ = cond_cancel_timer(Ref),
+    State1 = State#gen_zmq_socket{pending_recv = none},
+    gen_server:reply(From, {ok, gen_zmq_socket_fsm:decap_msg(Transport, IdMsg, State)}),
+    gen_zmq_socket_fsm:do({deliver, Transport}, State1);
+send_owner(Transport, IdMsg, #gen_zmq_socket{owner = Owner, mode = Mode} = State)
+=======
 send_owner(Transport, IdMsg, #ezmq_socket{pending_recv = {From, Ref}} = State) ->
     case Ref of
         none -> ok;
@@ -539,12 +547,23 @@ send_owner(Transport, IdMsg, #ezmq_socket{pending_recv = {From, Ref}} = State) -
     gen_server:reply(From, {ok, ezmq_socket_fsm:decap_msg(Transport, IdMsg, State)}),
     ezmq_socket_fsm:do({deliver, Transport}, State1);
 send_owner(Transport, IdMsg, #ezmq_socket{owner = Owner, mode = Mode} = State)
+>>>>>>> f92b4cdbb318fd43287d853ab752b8555e88412b:src/ezmq.erl
   when Mode == active; Mode == active_once ->
     Owner ! {zmq, self(), ezmq_socket_fsm:decap_msg(Transport, IdMsg, State)},
     NewState = ezmq_socket_fsm:do({deliver, Transport}, State),
     next_mode(NewState).
 
+<<<<<<< HEAD:src/gen_zmq.erl
+cond_cancel_timer(none) -> 
+    ok;
+cond_cancel_timer(Ref) ->
+    erlang:cancel_timer(Ref).
+
+
+next_mode(#gen_zmq_socket{mode = active} = State) ->
+=======
 next_mode(#ezmq_socket{mode = active} = State) ->
+>>>>>>> f92b4cdbb318fd43287d853ab752b8555e88412b:src/ezmq.erl
     queue_run(State);
 next_mode(#ezmq_socket{mode = active_once} = State) ->
     State#ezmq_socket{mode = passive}.
