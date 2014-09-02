@@ -127,6 +127,7 @@ setup({connect, MqSocket, Identity, tcp, Address, Port, TcpOpts, Timeout}, State
     case gen_tcp:connect(Address, Port, TcpOpts, Timeout) of
         {ok, Socket} ->
             NewState = State#state{mqsocket = MqSocket, identity = Identity, socket = Socket},
+            erlang:monitor(process, MqSocket),
             ok = inet:setopts(Socket, [{active, once}]),
             {next_state, connecting, NewState, ?CONNECT_TIMEOUT};
         Reply ->
@@ -251,6 +252,9 @@ handle_sync_event(_Event, _From, StateName, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_info({'EXIT', MqSocket, _Reason}, _StateName, #state{mqsocket = MqSocket} = State) ->
+    {stop, normal, State#state{mqsocket = undefined}};
+
+handle_info({'DOWN',_Ref, process, MqSocket, normal}, _StateName, #state{mqsocket = MqSocket} = State) ->
     {stop, normal, State#state{mqsocket = undefined}};
 
 handle_info({tcp, Socket, Data}, StateName, #state{socket = Socket} = State) ->
